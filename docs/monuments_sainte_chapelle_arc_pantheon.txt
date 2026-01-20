@@ -1,0 +1,29 @@
+TITLE: monuments_sainte_chapelle_arc_pantheon
+SOURCE: monuments_sainte_chapelle_arc_pantheon.txt
+CITY: Paris
+
+Monumente Istorice
+1) Sainte-Chapelle
+Info: Capelă gotică celebră pentru vitralii.
+
+Preț: 13.00 EUR (Adult).
+
+Accesibilitate: Există un lift special pentru scaune cu rotile (solicitați personalului).
+
+Regulă: Securitate strictă din cauza proximității de Palatul de Justiție.
+
+2) Arc de Triomphe
+Info: Monument dedicat victoriilor militare.
+
+Program: Zilnic 10:00 - 22:30.
+
+Preț: 15.00 EUR.
+
+Accesibilitate: Lift disponibil doar până la nivelul muzeului; pentru platforma superioară sunt 40 de trepte suplimentare.
+
+3) Panthéon
+Info: Locul de odihnă al marilor personalități.
+
+Preț: 12.50 EUR.
+
+Sfat: Nu ratați Pendulul lui Foucault din centrul navei.

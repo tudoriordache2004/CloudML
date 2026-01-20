@@ -1,0 +1,22 @@
+TITLE: transport_tickets_and_rules
+SOURCE: transport_tickets_and_rules.txt
+CITY: Paris
+
+Sistemul de Transport
+Transportul public în Paris acoperă toate atracțiile majore, inclusiv zonele periferice precum Palace of Versailles (day trip).
+
+Tipuri de Bilete și Prețuri
+Bilet T+ (Single): 2.20 EUR. Valabil pentru o călătorie cu metroul sau autobuzul (fără transfer metrou-autobuz).
+
+Day Pass (Zone 1-3): 14.50 EUR. Include acces la Centre Pompidou și Notre-Dame area (exterior visit).
+
+Weekly Pass (Navigo): 32.00 EUR + 5 EUR cardul fizic. Necesită o fotografie tip pașaport.
+
+Bilet RER Versailles: 7.50 EUR (dus-întors de la Paris la Palace of Versailles (day trip)).
+
+Reguli și Amenzi
+Validare: Biletele trebuie validate la fiecare intrare în stație sau vehicul.
+
+Amenzi: Controlorii pot aplica amenzi pe loc (între 35 EUR și 80 EUR) dacă biletul nu este validat sau este pentru zona greșită.
+
+Accesibilitate: Stațiile de metrou vechi au accesibilitate limitată. Autobuzele și stațiile de RER pentru Musée d'Orsay sunt complet accesibile pentru scaune cu rotile.

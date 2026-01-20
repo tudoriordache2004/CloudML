@@ -1,0 +1,25 @@
+TITLE: eiffel_tower_visitor_info
+SOURCE: eiffel_tower_visitor_info.txt
+CITY: Paris
+
+Eiffel Tower
+Simbolul Parisului oferă vederi panoramice asupra orașului, inclusiv spre Arc de Triomphe.
+
+Opening hours 
+Luni - Duminică: 09:30 - 23:45 (Lift)
+
+Luni - Duminică: 09:30 - 18:30 (Scări)
+
+Ticket prices
+Adult (Lift până în vârf): 29.00 EUR
+
+Adult (Scări până la etajul 2): 12.00 EUR
+
+Copil (4-11 ani): 8.00 EUR
+
+Accesibilitate și Securitate
+Securitate: Două perimetre de control. Toate gențile sunt scanate.
+
+Accesibilitate: Etajele 1 și 2 sunt accesibile cu liftul pentru persoanele în scaun cu rotile. Vârful (The Top) nu este accesibil din motive de siguranță la evacuare.
+
+Sfat: Vizitați la ora apusului pentru a vedea spectacolul de lumini (la fiecare oră fixă, timp de 5 minute).

@@ -1,0 +1,31 @@
+TITLE: louvre_visitor_info
+SOURCE: louvre_visitor_info.txt
+CITY: Paris
+
+Louvre Museum
+Cel mai mare muzeu de artă din lume necesită planificare riguroasă.
+
+Opening hours
+Luni: 09:00 - 18:00
+
+Marți: ÎNCHIS
+
+Miercuri - Joi: 09:00 - 18:00
+
+Vineri: 09:00 - 21:45 (Nocturnă)
+
+Sâmbătă - Duminică: 09:00 - 18:00
+
+Ticket prices 
+Adult: 22.00 EUR
+
+Student (non-EU <26): 15.00 EUR
+
+Sub 18 ani: Gratuit
+
+Accesibilitate și Sfaturi
+Accesibilitate: Lifturi disponibile în toate ariile (Richelieu, Sully, Denon). Scaune cu rotile disponibile pentru împrumut gratuit la intrarea de sub Piramidă.
+
+Sfat: Intrați prin "Porte des Lions" pentru a evita coada de la Piramidă dacă aveți deja bilet.
+
+Reguli: Nu atingeți operele de artă. Distanța minimă este de 50 cm.

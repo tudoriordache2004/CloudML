@@ -1,0 +1,27 @@
+TITLE: versailles_day_trip_info
+SOURCE: versailles_day_trip_info.txt
+CITY: Paris
+
+Palace of Versailles (day trip)
+O excursie esențială în afara centrului Parisului.
+
+Opening hours
+Marți - Duminică: 09:00 - 18:30 (Palatul)
+
+Grădinile: Zilnic 08:00 - 19:00
+
+Luni: ÎNCHIS
+
+Ticket prices
+Passport (Palat + Grădini): 28.50 EUR
+
+Doar Grădinile: 10.00 EUR (în zilele cu spectacol de fântâni)
+
+Sub 18 ani: Gratuit (doar pentru Palat)
+
+Accesibilitate și Reguli
+Transport: Luați RER C până la stația "Versailles Château Rive Gauche".
+
+Accesibilitate: Palatul este accesibil cu lifturi. Grădinile sunt vaste; se recomandă închirierea unei mașinuțe electrice (cost suplimentar).
+
+Sfat: Alocați cel puțin 6 ore pentru întreaga proprietate. Rezervarea intervalului orar este obligatorie.

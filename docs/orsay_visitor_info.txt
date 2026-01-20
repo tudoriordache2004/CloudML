@@ -1,0 +1,27 @@
+TITLE: orsay_visitor_info
+SOURCE: orsay_visitor_info.txt
+CITY: Paris
+
+Musée d'Orsay
+Găzduit într-o fostă gară, acest muzeu este faimos pentru colecția impresionistă.
+
+Opening hours
+Marți - Duminică: 09:30 - 18:00
+
+Joi: 09:30 - 21:45
+
+Luni: ÎNCHIS
+
+Ticket prices
+Adult: 18.00 EUR
+
+Student (non-EU): 13.00 EUR
+
+Grup (>10 persoane): 15.00 EUR/pers
+
+Accesibilitate și Sfaturi
+Accesibilitate: Intrare dedicată (Poarta C) pentru persoane cu mobilitate redusă. Toate nivelurile sunt deservite de lifturi largi.
+
+Sfat: Începeți vizita de la etajul 5 (Impresioniștii) și coborâți. Este mai puțin aglomerat dimineața.
+
+Reguli: Gențile voluminoase trebuie lăsate la garderoba de la parter.
