@@ -17,8 +17,8 @@ SEARCH_ENDPOINT = os.environ["AZURE_SEARCH_ENDPOINT"]
 SEARCH_KEY = os.environ["AZURE_SEARCH_ADMIN_KEY"]
 SEARCH_INDEX = os.environ["AZURE_SEARCH_INDEX"]
 
-AOAI_ENDPOINT = os.environ["AZURE_OPENAI_ENDPOINT"]
-AOAI_KEY = os.environ["AZURE_OPENAI_API_KEY"]
+AOAI_EMBED_ENDPOINT = os.environ["AZURE_OPENAI_EMBED_ENDPOINT"]
+AOAI_EMBED_KEY = os.environ["AZURE_OPENAI_EMBED_API_KEY"]
 AOAI_EMBED_DEPLOYMENT = os.environ["AZURE_OPENAI_EMBED_DEPLOYMENT"]  # deployment name
 EMBED_DIM = 1536  # text-embedding-3-small
 
@@ -117,8 +117,8 @@ def embed_texts(client: AzureOpenAI, texts: List[str]) -> List[List[float]]:
 
 def main():
     aoai = AzureOpenAI(
-        api_key=AOAI_KEY,
-        azure_endpoint=AOAI_ENDPOINT,
+        api_key=AOAI_EMBED_KEY,
+        azure_endpoint=AOAI_EMBED_ENDPOINT,
         api_version="2024-02-01",  # ok for embeddings; if your resource needs another, adjust
     )
 
