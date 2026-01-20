@@ -1,5 +1,8 @@
 import os
+from typing import List
 from dotenv import load_dotenv
+from pydantic import BaseModel
+from fastapi import FastAPI
 from openai import AzureOpenAI
 
 from azure.core.credentials import AzureKeyCredential
@@ -15,8 +18,26 @@ AOAI_CHAT_ENDPOINT = os.environ["AZURE_OPENAI_CHAT_ENDPOINT"]
 AOAI_CHAT_KEY = os.environ["AZURE_OPENAI_CHAT_KEY"]
 AOAI_CHAT_DEPLOYMENT = os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT"]
 
-def main():
-    question = os.environ.get("QUESTION", "Ce pot vizita în Paris într-o zi ploioasă?")
+app = FastAPI()
+
+
+class ChatRequest(BaseModel):
+    question: str
+
+
+class Citation(BaseModel):
+    source: str
+    chunk_id: int
+
+
+class ChatResponse(BaseModel):
+    answer: str
+    citations: List[Citation]
+
+
+@app.post("/chat", response_model=ChatResponse)
+def chat(request: ChatRequest):
+    question = request.question
 
     search = SearchClient(
         endpoint=SEARCH_ENDPOINT,
@@ -26,11 +47,14 @@ def main():
 
     results = list(search.search(search_text=question, top=5))
     contexts = []
+    citations_set = set()
+    
     for r in results:
         contexts.append(
             f"- SOURCE: {r.get('source')} | TITLE: {r.get('title')} | chunk_id: {r.get('chunk_id')}\n"
             f"  CONTENT: {r.get('content')}\n"
         )
+        citations_set.add((r.get('source'), r.get('chunk_id')))
 
     aoai = AzureOpenAI(
         api_key=AOAI_CHAT_KEY,
@@ -41,7 +65,7 @@ def main():
     system = (
         "Ești un asistent de turism pentru Paris. Folosește DOAR contextul dat. "
         "Dacă nu ai informația în context, spune că nu apare în date. "
-        "La final, include o secțiune 'Citations:' cu lista de (source, chunk_id)."
+        "Răspunde fără secțiunea 'Citations:' - aceasta va fi adăugată separat."
     )
 
     user = f"Întrebare: {question}\n\nContext:\n{''.join(contexts)}"
@@ -56,7 +80,7 @@ def main():
         temperature=0.2,
     )
 
-    print(resp.choices[0].message.content)
+    answer = resp.choices[0].message.content
+    citations = [Citation(source=source, chunk_id=chunk_id) for source, chunk_id in citations_set]
 
-if __name__ == "__main__":
-    main()
+    return ChatResponse(answer=answer, citations=citations)
