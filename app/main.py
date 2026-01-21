@@ -1,5 +1,6 @@
 import os
 import logging
+import pyodbc
 from typing import List
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
@@ -46,7 +47,46 @@ class ChatResponse(BaseModel):
 
 @app.get("/health")
 async def health_check():
-    return {"status": "online"}
+    health_status = {
+        "status": "online",
+        "services": {
+            "azure_search": "unknown",
+            "azure_openai": "unknown",
+            "azure_sql": "unknown"
+        }
+    }
+
+    # 1. Ping Azure SQL
+    try:
+        # Construim connection string-ul din .env
+        conn_str = (
+            f"Driver={{ODBC Driver 18 for SQL Server}};"
+            f"Server=tcp:{os.environ['SQL_SERVER']},1433;"
+            f"Database={os.environ['SQL_DATABASE']};"
+            f"Uid={os.environ['SQL_USER']};"
+            f"Pwd={os.environ['SQL_PASSWORD']};"
+            f"Encrypt=yes;TrustServerCertificate=no;Connection Timeout=5;"
+        )
+        
+        # Încercăm o conexiune rapidă
+        with pyodbc.connect(conn_str) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT 1")
+                health_status["services"]["azure_sql"] = "connected"
+    except Exception as e:
+        logger.error(f"SQL Health Check failed: {e}")
+        health_status["services"]["azure_sql"] = f"error: {str(e)}"
+        health_status["status"] = "degraded"
+
+    # 2. Verificare Search Client (simplă verificare dacă obiectul există)
+    if "search" in clients:
+        health_status["services"]["azure_search"] = "initialized"
+    
+    # 3. Verificare OpenAI Client
+    if "openai" in clients:
+        health_status["services"]["azure_openai"] = "initialized"
+
+    return health_status
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
