@@ -55,16 +55,16 @@ class Citation(BaseModel):
 class ChatResponse(BaseModel):
     answer: str
     citations: List[Citation]
+    execution_flow: str
+    latency_ms: float
 
 def get_sql_data(question: str):
-    """Interoghează Azure SQL pe baza tabelelor tale."""
     try:
         with pyodbc.connect(clients["sql_conn_str"]) as conn:
             cursor = conn.cursor()
-            # Căutăm atracția și detaliile de preț/orar
-            # Folosim o logică simplă de pattern matching pe nume
+            # Interogare bazată pe tabelele tale: attractions, opening_hours, tickets
             query = """
-                SELECT TOP 1 a.attraction_name, h.open_time, h.close_time, t.price, t.currency, t.ticket_type
+                SELECT TOP 1 a.attraction_name, h.open_time, h.close_time, t.price, t.currency
                 FROM attractions a
                 JOIN opening_hours h ON a.attraction_name = h.attraction_name
                 JOIN tickets t ON a.attraction_name = t.attraction_name
@@ -74,12 +74,12 @@ def get_sql_data(question: str):
             row = cursor.fetchone()
             if row:
                 return {
-                    "text": f"Informații oficiale SQL pentru {row.attraction_name}: Deschis între {row.open_time} și {row.close_time}. Bilet {row.ticket_type}: {row.price} {row.currency}.",
-                    "source": "Azure SQL Database"
+                    "text": f"Date SQL: {row.attraction_name} | Orar: {row.open_time}-{row.close_time} | Pret: {row.price} {row.currency}",
+                    "source": "Azure SQL (PaaS)"
                 }
             return None
     except Exception as e:
-        logger.error(f"SQL Query Error: {e}")
+        logger.error(f"SQL Error: {e}")
         return None
 
 @app.get("/health")
@@ -94,54 +94,54 @@ async def health_check():
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
+    start_time = time.perf_counter()
+    flow_type = ""
+    contexts = []
+    citations = []
+    
     try:
-        start_time = time.perf_counter()
-        contexts = []
-        citations = []
-        
-        # 1. Router Logic: Detectăm dacă e query de SQL (prețuri/orar)
+        # 1. Verificare cuvinte cheie SQL
         sql_keywords = ["pret", "preț", "bilet", "ticket", "price", "orar", "hours", "open", "deschis"]
         is_sql_query = any(k in request.question.lower() for k in sql_keywords)
         
+        # 2. Execuție Flow SQL + LLM
         if is_sql_query:
             sql_result = get_sql_data(request.question)
             if sql_result:
                 contexts.append(sql_result["text"])
                 citations.append(Citation(source=sql_result["source"], chunk_id=0))
+                flow_type = "SQL + LLM"
 
-        # 2. Search (Async) - Fallback sau completare dacă nu avem destule date din SQL
+        # 3. Execuție Flow Search + LLM (dacă SQL nu a fost declanșat sau nu a găsit nimic)
         if not contexts:
             search_results = await clients["search"].search(search_text=request.question, top=5)
             async for r in search_results:
-                contexts.append(
-                    f"- SOURCE: {r.get('source')} | chunk_id: {r.get('chunk_id')}\n"
-                    f"  CONTENT: {r.get('content')}\n"
-                )
+                contexts.append(f"Content: {r.get('content')}")
                 citations.append(Citation(source=r.get('source'), chunk_id=r.get('chunk_id')))
+            flow_type = "Search + LLM"
 
-        # 3. LLM Call
-        system_prompt = (
-            "Ești un asistent de turism pentru Paris. Folosește contextul dat. "
-            "Dacă datele vin din SQL, ele sunt prioritare și exacte."
-        )
-        user_prompt = f"Întrebare: {request.question}\n\nContext:\n{''.join(contexts)}"
-
+        # 4. Apel LLM
         response = await clients["openai"].chat.completions.create(
             model=os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT"],
             messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
+                {"role": "system", "content": "Ești un asistent de turism. Folosește contextul oferit."},
+                {"role": "user", "content": f"Context: {' '.join(contexts)}\nIntrebare: {request.question}"}
             ],
             temperature=0.2
         )
 
-        duration = (time.perf_counter() - start_time) * 1000
-        logger.info(f"Chat request processed in {duration:.2f}ms")
+        latency = (time.perf_counter() - start_time) * 1000
+        
+        # LOGARE ÎN CONSOLĂ
+        logger.info(f">>> FLOW DETECTED: {flow_type} | Latency: {latency:.2f}ms")
 
         return ChatResponse(
             answer=response.choices[0].message.content,
-            citations=citations
+            citations=citations,
+            execution_flow=flow_type,
+            latency_ms=round(latency, 2)
         )
+        
     except Exception as e:
-        logger.error(f"Error in chat endpoint: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+        logger.error(f"Error: {e}")
+        raise HTTPException(status_code=500, detail="Internal Error")
