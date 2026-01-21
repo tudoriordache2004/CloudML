@@ -62,24 +62,41 @@ def get_sql_data(question: str):
     try:
         with pyodbc.connect(clients["sql_conn_str"]) as conn:
             cursor = conn.cursor()
-            # Interogare bazată pe tabelele tale: attractions, opening_hours, tickets
+            
+            # Curățăm puțin întrebarea pentru o căutare mai bună
+            search_term = question.lower().replace("care este pretul la ", "").replace("?", "").strip()
+            
+            # Interogare optimizată
+            # Folosim LEFT JOIN ca să nu pierdem date dacă un tabel e incomplet
             query = """
-                SELECT TOP 1 a.attraction_name, h.open_time, h.close_time, t.price, t.currency
+                SELECT TOP 1 
+                    a.attraction_name, 
+                    h.open_time, 
+                    h.close_time, 
+                    t.price, 
+                    t.currency, 
+                    t.ticket_type
                 FROM attractions a
-                JOIN opening_hours h ON a.attraction_name = h.attraction_name
-                JOIN tickets t ON a.attraction_name = t.attraction_name
-                WHERE ? LIKE '%' + a.attraction_name + '%'
+                LEFT JOIN opening_hours h ON a.attraction_name = h.attraction_name
+                LEFT JOIN tickets t ON a.attraction_name = t.attraction_name
+                WHERE a.attraction_name LIKE ? OR ? LIKE '%' + a.attraction_name + '%'
             """
-            cursor.execute(query, (question,))
+            # Încercăm să potrivim fie numele din DB în întrebare, fie invers
+            param = f"%{search_term}%"
+            cursor.execute(query, (param, question))
+            
             row = cursor.fetchone()
             if row:
+                logger.info(f"SQL Match Found: {row.attraction_name}")
                 return {
-                    "text": f"Date SQL: {row.attraction_name} | Orar: {row.open_time}-{row.close_time} | Pret: {row.price} {row.currency}",
-                    "source": "Azure SQL (PaaS)"
+                    "text": f"Date SQL Oficiale: {row.attraction_name} | Orar: {row.open_time}-{row.close_time} | Bilet {row.ticket_type}: {row.price} {row.currency}",
+                    "source": "Azure SQL Database"
                 }
+            
+            logger.info("No SQL match found for: " + question)
             return None
     except Exception as e:
-        logger.error(f"SQL Error: {e}")
+        logger.error(f"SQL Query Error: {e}")
         return None
 
 @app.get("/health")
