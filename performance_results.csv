@@ -1,0 +1,25 @@
+question,run,http_status,execution_flow,server_latency_ms,client_latency_ms
+Care este programul pentru Louvre Museum?,1,200,Search + LLM,3971.31,4448.32
+Care este programul pentru Louvre Museum?,2,200,Search + LLM,1539.2,1842.46
+Care este prețul biletului Adult la Louvre Museum?,1,200,Search + LLM,16234.74,16588.68
+Care este prețul biletului Adult la Louvre Museum?,2,200,Search + LLM,16202.98,16485.22
+Este Musée d'Orsay deschis luni?,1,200,SQL + LLM,12307.45,12800.23
+Este Musée d'Orsay deschis luni?,2,200,SQL + LLM,1429.26,1739.14
+Care este cel mai ieftin bilet disponibil și pentru ce atracție?,1,200,Search + LLM,1480.98,1739.74
+Care este cel mai ieftin bilet disponibil și pentru ce atracție?,2,200,Search + LLM,2213.81,2558.67
+Ce reguli de securitate ar trebui să respect la atracțiile din Paris?,1,200,Search + LLM,3966.98,4301.13
+Ce reguli de securitate ar trebui să respect la atracțiile din Paris?,2,200,Search + LLM,3398.93,3893.7
+Ce sfaturi ai pentru a evita aglomerația la principalele atracții?,1,200,Search + LLM,5458.72,5731.62
+Ce sfaturi ai pentru a evita aglomerația la principalele atracții?,2,200,Search + LLM,4184.78,4504.46
+"Ce recomandări ai despre transportul public în Paris (validare, reguli)?",1,200,Search + LLM,5032.75,5328.2
+"Ce recomandări ai despre transportul public în Paris (validare, reguli)?",2,200,Search + LLM,4875.39,5217.16
+Ce pot vizita în Paris într-o zi ploioasă și de ce?,1,200,Search + LLM,5843.37,6245.07
+Ce pot vizita în Paris într-o zi ploioasă și de ce?,2,200,Search + LLM,5421.09,5733.41
+Vreau să vizitez Louvre Museum: spune-mi programul și ce reguli de acces ar trebui să știu.,1,200,Search + LLM,4443.43,4697.57
+Vreau să vizitez Louvre Museum: spune-mi programul și ce reguli de acces ar trebui să știu.,2,200,Search + LLM,3382.19,3700.04
+Recomandă-mi o atracție sub 20 EUR și explică regulile/condițiile de acces.,1,200,Search + LLM,3868.57,4217.17
+Recomandă-mi o atracție sub 20 EUR și explică regulile/condițiile de acces.,2,200,Search + LLM,3912.72,4240.08
+Spune-mi dacă Musée d'Orsay e deschis marți și ce sfaturi ai pentru vizită.,1,200,SQL + LLM,2213.31,2454.34
+Spune-mi dacă Musée d'Orsay e deschis marți și ce sfaturi ai pentru vizită.,2,200,SQL + LLM,2126.45,2397.31
+Compară Eiffel Tower cu Seine River Cruise: prețuri + ce trebuie să știu înainte să merg.,1,200,SQL + LLM,5375.93,5631.52
+Compară Eiffel Tower cu Seine River Cruise: prețuri + ce trebuie să știu înainte să merg.,2,200,SQL + LLM,6218.57,6655.86

@@ -6,8 +6,8 @@ from collections import defaultdict
 
 import requests
 
-API_URL = os.getenv("API_URL", "http://127.0.0.1:8000/chat")
-RUNS_PER_QUESTION = int(os.getenv("RUNS_PER_QUESTION", "8"))
+API_URL = os.getenv("API_URL", "https://webapp-rag-dtchdma6f5cnesb6.francecentral-01.azurewebsites.net/chat")
+RUNS_PER_QUESTION = int(os.getenv("RUNS_PER_QUESTION", "2"))
 TIMEOUT_SEC = int(os.getenv("TIMEOUT_SEC", "60"))
 
 QUESTIONS = [

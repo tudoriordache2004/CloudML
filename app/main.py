@@ -62,41 +62,58 @@ def get_sql_data(question: str):
     try:
         with pyodbc.connect(clients["sql_conn_str"]) as conn:
             cursor = conn.cursor()
+            q_lower = question.lower()
             
-            # Curățăm puțin întrebarea pentru o căutare mai bună
-            search_term = question.lower().replace("care este pretul la ", "").replace("?", "").strip()
+            # 1. Gestionare Ieftin/Scump (Agregări)
+            order = None
+            if any(word in q_lower for word in ["ieftin", "minim", "mic"]):
+                order = "ASC"
+            elif any(word in q_lower for word in ["scump", "maxim", "mare"]):
+                order = "DESC"
             
-            # Interogare optimizată
-            # Folosim LEFT JOIN ca să nu pierdem date dacă un tabel e incomplet
+            if order:
+                cursor.execute(f"""
+                    SELECT TOP 1 a.attraction_name, t.price, t.currency, t.ticket_type
+                    FROM attractions a
+                    JOIN tickets t ON a.attraction_name = t.attraction_name
+                    ORDER BY t.price {order}
+                """)
+                row = cursor.fetchone()
+                if row:
+                    return f"Informație SQL: {row.attraction_name} are biletul {row.ticket_type} la prețul de {row.price} {row.currency}."
+
+            # 2. Curățare pentru potrivire nume (extragere search_term)
+            noise = ["care", "este", "pretul", "prețul", "orarul", "programul", "la", "pentru", "e", "vă rog", "spune-mi"]
+            search_term = q_lower
+            for w in noise:
+                search_term = search_term.replace(f" {w} ", " ").replace(f"{w} ", "")
+            search_term = search_term.replace("?", "").strip()
+
+            # 3. Potrivire bidirecțională
             query = """
-                SELECT TOP 1 
-                    a.attraction_name, 
-                    h.open_time, 
-                    h.close_time, 
-                    t.price, 
-                    t.currency, 
-                    t.ticket_type
+                SELECT a.attraction_name, h.open_time, h.close_time, t.price, t.currency, t.ticket_type
                 FROM attractions a
                 LEFT JOIN opening_hours h ON a.attraction_name = h.attraction_name
                 LEFT JOIN tickets t ON a.attraction_name = t.attraction_name
-                WHERE a.attraction_name LIKE ? OR ? LIKE '%' + a.attraction_name + '%'
+                WHERE ? LIKE '%' + a.attraction_name + '%' 
+                OR a.attraction_name LIKE ?
             """
-            # Încercăm să potrivim fie numele din DB în întrebare, fie invers
-            param = f"%{search_term}%"
-            cursor.execute(query, (param, question))
+            cursor.execute(query, (q_lower, f"%{search_term}%"))
+            rows = cursor.fetchall()
             
-            row = cursor.fetchone()
-            if row:
-                logger.info(f"SQL Match Found: {row.attraction_name}")
-                return {
-                    "text": f"Date SQL Oficiale: {row.attraction_name} | Orar: {row.open_time}-{row.close_time} | Bilet {row.ticket_type}: {row.price} {row.currency}",
-                    "source": "Azure SQL Database"
-                }
-            
-            logger.info("No SQL match found for: " + question)
+            if rows:
+                data = {}
+                for r in rows:
+                    if r.attraction_name not in data:
+                        data[r.attraction_name] = {"orar": f"{r.open_time}-{r.close_time}", "bilete": []}
+                    if r.price:
+                        data[r.attraction_name]["bilete"].append(f"{r.ticket_type}: {r.price} {r.currency}")
+                
+                res_parts = [f"{name} (Orar: {info['orar']}, Bilete: {', '.join(info['bilete'])})" for name, info in data.items()]
+                return "\n".join(res_parts)
             return None
     except Exception as e:
-        logger.error(f"SQL Query Error: {e}")
+        logger.error(f"SQL Error: {e}")
         return None
 
 @app.get("/health")
@@ -112,53 +129,46 @@ async def health_check():
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     start_time = time.perf_counter()
-    flow_type = ""
-    contexts = []
-    citations = []
+    q_lower = request.question.lower()
+    contexts, citations, flow = [], [], []
+
+    # Keywords extinse
+    sql_k = ["pret", "preț", "bilet", "ticket", "price", "orar", "program", "deschis", "inchis", "când", "ora", "luni", "marți", "miercuri", "joi", "vineri", "sâmbătă", "duminică", "ieftin", "scump", "euro"]
+    search_k = ["reguli", "securitate", "sfat", "tips", "recomand", "vizit", "istorie", "acces", "ghid", "transport", "metrou", "compar"]
+
+    # 1. Verificare SQL
+    if any(k in q_lower for k in sql_k):
+        sql_info = get_sql_data(request.question)
+        if sql_info:
+            contexts.append(f"DATE SQL (OFICIAL):\n{sql_info}")
+            citations.append(Citation(source="Azure SQL Database", chunk_id=0))
+            flow.append("SQL")
+
+    # 2. Verificare Search (Dacă e nevoie de detalii sau SQL nu a găsit nimic)
+    needs_search = any(k in q_lower for k in search_k)
+    if needs_search or not contexts:
+        s_res = await clients["search"].search(search_text=request.question, top=3)
+        async for r in s_res:
+            contexts.append(f"DOCUMENTE: {r['content']}")
+            citations.append(Citation(source=r['source'], chunk_id=r['chunk_id']))
+        flow.append("SEARCH")
+
+    # 3. Generare Răspuns LLM
+    final_flow = " + ".join(list(dict.fromkeys(flow))) + " + LLM"
     
-    try:
-        # 1. Verificare cuvinte cheie SQL
-        sql_keywords = ["pret", "preț", "bilet", "ticket", "price", "orar", "hours", "open", "deschis"]
-        is_sql_query = any(k in request.question.lower() for k in sql_keywords)
-        
-        # 2. Execuție Flow SQL + LLM
-        if is_sql_query:
-            sql_result = get_sql_data(request.question)
-            if sql_result:
-                contexts.append(sql_result["text"])
-                citations.append(Citation(source=sql_result["source"], chunk_id=0))
-                flow_type = "SQL + LLM"
+    response = await clients["openai"].chat.completions.create(
+        model=os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT"],
+        messages=[
+            {"role": "system", "content": "Ești un asistent de turism pentru Paris. Combină datele SQL (prețuri/orar) cu informațiile din documente. Prioritizează SQL pentru cifre."},
+            {"role": "user", "content": f"Context:\n{' '.join(contexts)}\n\nÎntrebare: {request.question}"}
+        ],
+        temperature=0.2
+    )
 
-        # 3. Execuție Flow Search + LLM (dacă SQL nu a fost declanșat sau nu a găsit nimic)
-        if not contexts:
-            search_results = await clients["search"].search(search_text=request.question, top=5)
-            async for r in search_results:
-                contexts.append(f"Content: {r.get('content')}")
-                citations.append(Citation(source=r.get('source'), chunk_id=r.get('chunk_id')))
-            flow_type = "Search + LLM"
-
-        # 4. Apel LLM
-        response = await clients["openai"].chat.completions.create(
-            model=os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT"],
-            messages=[
-                {"role": "system", "content": "Ești un asistent de turism. Folosește contextul oferit."},
-                {"role": "user", "content": f"Context: {' '.join(contexts)}\nIntrebare: {request.question}"}
-            ],
-            temperature=0.2
-        )
-
-        latency = (time.perf_counter() - start_time) * 1000
-        
-        # LOGARE ÎN CONSOLĂ
-        logger.info(f">>> FLOW DETECTED: {flow_type} | Latency: {latency:.2f}ms")
-
-        return ChatResponse(
-            answer=response.choices[0].message.content,
-            citations=citations,
-            execution_flow=flow_type,
-            latency_ms=round(latency, 2)
-        )
-        
-    except Exception as e:
-        logger.error(f"Error: {e}")
-        raise HTTPException(status_code=500, detail="Internal Error")
+    latency = (time.perf_counter() - start_time) * 1000
+    return ChatResponse(
+        answer=response.choices[0].message.content,
+        citations=citations,
+        execution_flow=final_flow,
+        latency_ms=round(latency, 2)
+    )
