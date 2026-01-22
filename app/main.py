@@ -132,15 +132,37 @@ async def chat(request: ChatRequest):
     q_lower = request.question.lower()
     contexts, citations, flow = [], [], []
 
-    # Keywords extinse
-    sql_k = ["pret", "preț", "bilet", "ticket", "price", "orar", "program", "deschis", "inchis", "când", "ora", "luni", "marți", "miercuri", "joi", "vineri", "sâmbătă", "duminică", "ieftin", "scump", "euro"]
-    search_k = ["reguli", "securitate", "sfat", "tips", "recomand", "vizit", "istorie", "acces", "ghid", "transport", "metrou", "compar"]
+    # 1. SQL KEYWORDS (Date structurate: prețuri, orar, disponibilitate)
+# Include articulări (prețul, biletul) și plural (prețuri, bilete)
+    sql_k = [
+    "pret", "preț", "pretul", "prețul", "preturi", "prețuri", 
+    "bilet", "bilete", "biletul", "biletele", "biletului",
+    "costa", "costă", "euro", "ieftin", "ieftină", "scump", "scumpă",
+    "maxim", "minim", "mic", "mică", "mare",
+    "orar", "orarul", "program", "programul", "funcționare", "vizitare",
+    "deschis", "inchis", "închis", "cand", "când", "ora", "ore", "orele",
+    "luni", "marti", "marți", "miercuri", "joi", "vineri", "sambata", "sâmbătă", "sâmbăta", "duminica", "duminică",
+    "adult", "student", "copil", "copii", "senior", "gratuit", "gratis"
+]
 
-    # 1. Verificare SQL
-    if any(k in q_lower for k in sql_k):
+# 2. SEARCH KEYWORDS (Context nestructurat: reguli, sfaturi, siguranță, istorie)
+# Include termeni care forțează accesarea documentelor PDF/TXT
+    search_k = [
+    "reguli", "securitate", "vigoare", "safety", "sfat", "sfaturi", "tips", 
+    "recomand", "recomanda", "recomandări", "recomandari", "istorie", "detalii",
+    "acces", "intrare", "ghid", "transport", "transportul", "metrou", "bus", "autobuz",
+    "harta", "hartă", "validare", "validarea", "evita", "cozi", "cozile", 
+    "restricții", "restrictii", "călătorie", "calatorie", "cunoască", "cunoasca", 
+    "compară", "compara", "îmbarcare", "imbarcare", "vizitarea", "ploaie", "ploioasă"
+]
+
+    # 1. Detecție SQL (PaaS)
+    is_sql_query = any(k in q_lower for k in sql_k)
+    sql_info = None
+    if is_sql_query:
         sql_info = get_sql_data(request.question)
         if sql_info:
-            contexts.append(f"DATE SQL (OFICIAL):\n{sql_info}")
+            contexts.append(f"DATE SQL:\n{sql_info}")
             citations.append(Citation(source="Azure SQL Database", chunk_id=0))
             flow.append("SQL")
 
